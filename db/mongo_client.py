@@ -10,7 +10,7 @@ _client = None
 def get_client():
     global _client
     if _client is None:
-        uri = "mongodb+srv://user1:TlcgHQA9U8IAWyvl@venuebase.olphlae.mongodb.net/?appName=venuebase"
+        uri = os.getenv("MONGODB_URI")
         if not uri:
             raise ValueError("MONGODB_URI not set in .env file")
         _client = MongoClient(uri)
