@@ -1,0 +1,64 @@
+Venuebase
+Facility & AV Reference Sheet
+Last updated: March 2024 | Contact: ops@luminavenues.com
+
+------------------------------------------------------------
+MAIN BALLROOM
+------------------------------------------------------------
+Capacity varies depending on setup:
+  - Rounds (banquet): 500 guests
+  - Classroom rows: 350
+  - Theater/auditorium: up to 600
+  - Cocktail/standing: ~700 (no tables)
+
+Floor area is roughly 12,000 sq ft. Ceiling clearance is 24 ft
+at center, drops slightly near the east wall due to HVAC
+ducting — worth flagging if clients need rigging on that side.
+
+------------------------------------------------------------
+AV SETUP
+------------------------------------------------------------
+Projection:
+  4x ceiling-mounted 4K laser projectors (20k lumens each)
+  2x 180" motorized screens — one front, one rear-projection
+
+Sound:
+  Bose line array, installed 2022. Covers the full room
+  including the pre-function corridor. 12 wireless channels
+  available (mix of lapel + handheld). Clients bringing their
+  own band or production team should coordinate with our AV
+  vendor (contact provided on request).
+
+Connectivity at podium: HDMI, USB-C, DisplayPort. Adapters
+kept at the AV desk — presenters don't need to bring their own.
+
+------------------------------------------------------------
+INTERNET / WIFI
+------------------------------------------------------------
+1 Gbps fiber line dedicated to attendees. Separate 500 Mbps
+line for staff/presenter backstage use. Both are on different
+SSIDs. IT support is on-site during event hours.
+
+Wi-Fi 6 APs in every breakout room. Passwords reset per event.
+Secured/hidden SSID available for sensitive corporate sessions
+on request.
+
+Note: streaming to external platforms (Zoom, Teams, etc.)
+works fine on the attendee line. Large file transfers during
+the event should go through the staff line.
+
+------------------------------------------------------------
+BREAKOUT ROOMS
+------------------------------------------------------------
+6 rooms total. Capacity ranges from 20 to 40 depending on
+layout. Each has a 65" 4K display, whiteboard wall, and its
+own climate control. Rooms 3 and 4 can be combined via
+partition if needed (combined cap ~70 classroom style).
+
+------------------------------------------------------------
+STAGE + LIGHTING
+------------------------------------------------------------
+48 ft wide modular stage. LED floor is standard. Full DMX
+rig — our lighting tech programs it in advance, changes
+during the event cost extra. Green room is backstage with
+a preview monitor.
