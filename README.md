@@ -94,41 +94,6 @@ Slow turnaround risks losing deals to competitors who respond faster.
 
 ---
 
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Streamlit Frontend                    │
-│                                                          │
-│  Login/Signup → Dashboard → Project Page                │
-│                             ├── Upload UI               │
-│                             ├── Coverage Metrics        │
-│                             ├── st.data_editor          │
-│                             └── Export Buttons          │
-└──────────────────────┬──────────────────────────────────┘
-                       │
-          ┌────────────▼────────────┐
-          │     RAG Pipeline        │
-          │                         │
-          │  document_loader.py     │  ← Extract + Chunk
-          │  vector_store.py        │  ← FAISS + Embeddings
-          │  answering_engine.py    │  ← Claude API + Prompt
-          └────────────┬────────────┘
-                       │
-        ┌──────────────▼──────────────┐
-        │         Data Layer          │
-        │                             │
-        │  MongoDB Atlas              │
-        │  ├── users collection       │  ← bcrypt auth
-        │  └── rfp_projects           │  ← Q&A persistence
-        │                             │
-        │  FAISS (in-memory)          │  ← Vector index
-        │  sentence-transformers      │  ← Local embeddings
-        └─────────────────────────────┘
-```
-
----
-
 ## Tech Stack & Trade-offs
 
 ### Frontend: Streamlit
@@ -145,12 +110,12 @@ AI pipeline is stable and the UX requirements are better defined.
 
 ---
 
-### AI / LLM: Anthropic Claude (claude-sonnet-4-5)
-**Why:** Claude's instruction-following on strict constraints ("answer ONLY from context,
+### AI / LLM: Gemini API(Gemini 2.0 Flash)
+**Why:** Gemini's instruction-following on strict constraints ("answer ONLY from context,
 output EXACTLY 'Not found in references' otherwise") is exceptionally reliable. The
-`claude-sonnet-4-5` model balances speed, cost, and accuracy well for this use case.
+`gemini 2.0 flash` model balances speed, cost, and accuracy well for this use case.
 
-**Trade-off:** Using the Anthropic API introduces a dependency on an external service
+**Trade-off:** Using the Gemini API introduces a dependency on an external service
 and per-token costs. An open-source alternative (e.g. Mistral via Ollama) would be
 fully local and free, but would require more prompt engineering to match the
 instruction-following quality on the strict "Not found" constraint.
@@ -208,7 +173,7 @@ browser tabs or server restarts. For production, I would replace this with
 ### Prerequisites
 - Python 3.10 or higher
 - A MongoDB Atlas account (free tier works fine)
-- An Anthropic API key
+- An Gemini API key
 
 ### Step 1 — Clone and set up environment
 
@@ -227,7 +192,7 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-your-key-here
+GEMINI_API_KEY=sk-ant-your-key-here
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/
 MONGODB_DB_NAME=venue_rfp
 ```
@@ -237,9 +202,9 @@ MONGODB_DB_NAME=venue_rfp
 2. Click **Connect** → **Drivers** → copy the connection string
 3. Replace `<password>` with your database user's password
 
-**Getting an Anthropic API key:**
-1. Go to [console.anthropic.com](https://console.anthropic.com)
-2. API Keys → Create Key → copy the value
+**Getting a Gemini API key:**
+1. To get your Gemini key → go to aistudio.google.com → Sign in → click "Get API Key" → "Create API key" → copy it.
+
 
 ### Step 3 — Run the app
 
@@ -264,19 +229,19 @@ The app opens at `http://localhost:8501`.
 
 ## Feature Breakdown
 
-### Phase 1 — Core Workflow (Must Have) ✅
+### Phase 1 — Core Workflow (Must Have)
 
 | Requirement | Implementation |
 |---|---|
 | Sign up and log in | `auth_utils.py` — bcrypt hashing, MongoDB users collection |
 | Upload questionnaire (CSV/XLSX) | `document_loader.parse_questionnaire()` — pandas, auto-detects question column |
 | Upload reference documents (PDF/TXT) | `document_loader.extract_text()` — pdfplumber + PyPDF2 fallback |
-| Generate answers with citations | `answering_engine.answer_all_questions()` — Claude RAG pipeline |
+| Generate answers with citations | `answering_engine.answer_all_questions()` — Gemini           RAG pipeline |
 | "Not found in references" guard | Strict system prompt + response parser |
 | Structured web view (Q / Answer / Citation) | `st.data_editor` with locked and editable columns |
 | Persistent storage | MongoDB `rfp_projects` collection — saved after every generation |
 
-### Phase 2 — Review & Export (Must Have) ✅
+### Phase 2 — Review & Export (Must Have) 
 
 | Requirement | Implementation |
 |---|---|
@@ -286,7 +251,7 @@ The app opens at `http://localhost:8501`.
 | Citations in export | Citation column included in both CSV and XLSX |
 | Same structure as input | Question ID and text order preserved from original upload |
 
-### Nice-to-Have Features ✅
+### Nice-to-Have Features 
 
 | Feature | Implementation |
 |---|---|
@@ -307,7 +272,7 @@ reputational damage.
 
 **Layer 1 — Retrieval context is explicit and labelled**
 
-Each chunk passed to Claude is prefixed with its source filename:
+Each chunk passed to gemini is prefixed with its source filename:
 ```
 [Excerpt 1 from Cancellation_and_Liability_Terms.txt]
 ... chunk text ...
@@ -407,67 +372,6 @@ Index: `user_id` (for fast per-user project listing)
 
 ---
 
-## RAG Pipeline Deep Dive
-
-```
-Reference Documents
-        │
-        ▼
-┌─────────────────────────────────┐
-│  document_loader.extract_text() │
-│  pdfplumber → PyPDF2 fallback   │
-│  .txt → UTF-8 read              │
-└───────────────┬─────────────────┘
-                │
-                ▼
-┌─────────────────────────────────┐
-│  document_loader.chunk_text()   │
-│  400 char chunks, 80 char       │
-│  overlap, sentence-boundary     │
-│  aware splitting                │
-└───────────────┬─────────────────┘
-                │
-                ▼
-┌─────────────────────────────────┐
-│  FAISSVectorStore.build()       │
-│  SentenceTransformer encodes    │
-│  all-MiniLM-L6-v2 (local)      │
-│  FAISS IndexFlatIP (cosine)     │
-└───────────────┬─────────────────┘
-                │
-        ┌───────┴───────┐
-        │  Per Question │
-        ▼               │
-┌───────────────────┐   │
-│  vector_store     │   │
-│  .query(q, top_k) │   │
-│  → top 4 chunks   │   │
-│    with scores    │   │
-└───────┬───────────┘   │
-        │               │
-        ▼               │
-┌───────────────────────┐
-│  answering_engine     │
-│  Build labelled       │
-│  context string       │
-│  + Call Claude API    │
-│  + Strict system      │
-│    prompt             │
-└───────┬───────────────┘
-        │
-        ▼
-┌───────────────────────┐
-│  _parse_response()    │
-│  Extract answer text  │
-│  Extract [Source:...] │
-│  Detect "not found"   │
-│  Map confidence score │
-└───────────────────────┘
-        │
-        ▼
-  Result dict saved
-  to MongoDB + session
-```
 
 **Chunk size rationale:** 400 characters (~80 tokens) is small enough that each
 chunk covers one policy clause, large enough to contain a complete answer.
@@ -476,7 +380,7 @@ captured by the next chunk.
 
 **top_k = 4 rationale:** Retrieves enough context to answer multi-part questions
 (e.g. a question about both dietary restrictions and outside catering) while staying
-within a context window that Claude processes quickly.
+within a context window that gemini processes quickly.
 
 ---
 
@@ -528,7 +432,7 @@ even if the AI produced one.
 | Single-user vector store | Move to a per-project persistent vector store (pgvector or Pinecone) |
 | No multi-tenancy for shared document libraries | Add a `shared_docs` collection and per-org document management |
 | Excel files with merged cells may mis-parse | Add a pre-processing step to flatten merged headers before pandas reads |
-| No rate limiting on API calls | Add exponential backoff + `tenacity` retry decorator to Claude calls |
+| No rate limiting on API calls | Add exponential backoff + `tenacity` retry decorator to gemini calls |
 | Password reset not implemented | Add email-based reset flow using SendGrid or similar |
 
 ---
