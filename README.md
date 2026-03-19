@@ -198,56 +198,6 @@ a cookie library or JWT infrastructure.
 browser tabs or server restarts. For production, I would replace this with
 `streamlit-authenticator` backed by signed JWT tokens stored in HTTP-only cookies.
 
----
-
-## Project Structure
-
-```
-venue-rfp-responder/
-│
-├── app.py                              # Streamlit entry point + page router
-├── requirements.txt                    # Pinned dependencies
-├── .env                                # API keys and MongoDB URI (not committed)
-│
-├── auth/
-│   ├── __init__.py
-│   └── auth_utils.py                   # signup, login, bcrypt, session helpers,
-│                                       # project CRUD
-│
-├── rag/
-│   ├── __init__.py
-│   ├── document_loader.py              # PDF/TXT extraction, chunking,
-│   │                                   # questionnaire parsing
-│   ├── vector_store.py                 # FAISS index build + cosine query
-│   └── answering_engine.py             # Claude API call, strict prompt,
-│                                       # response parser, batch + partial regen
-│
-├── db/
-│   ├── __init__.py
-│   └── mongo_client.py                 # MongoClient singleton, collection helpers,
-│                                       # index setup
-│
-├── utils/
-│   ├── __init__.py
-│   └── export.py                       # Formatted XLSX export with openpyxl,
-│                                       # colour coding, legend sheet
-│
-├── pages/
-│   ├── __init__.py
-│   ├── ui_helpers.py                   # Global CSS, nav bar, go_to() router
-│   ├── login_page.py                   # Login form UI
-│   ├── signup_page.py                  # Signup form UI
-│   ├── dashboard_page.py               # Project list + create new project
-│   └── project_page.py                 # Upload → Generate → Review → Export
-│
-└── reference_docs/                     # Mock Venuebase source-of-truth docs
-    ├── Floorplans_and_AV_Specs.txt
-    ├── Catering_and_Dietary_Policy.txt
-    ├── Cancellation_and_Liability_Terms.txt
-    └── Accessibility_and_Parking_Guide.txt
-```
-
----
 
 ## Setup & Installation
 
